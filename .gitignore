@@ -1,0 +1,16 @@
+# Local Config
+.env
+
+# Logs
+logs
+*.log
+
+# Mac
+.DS_Store
+
+
+# intellij
+*.iml
+*.ipr
+*.iws
+.idea/
