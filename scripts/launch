@@ -1,7 +1,7 @@
 #!/bin/bash
 
 user="root"
-daemonDir="/var/www/Ohmiesite/scripts"
+daemonDir="/var/www/nodesite/scripts"
 
 #Does not need to change per server
 tmuxFile="/tmp/ohmc"
