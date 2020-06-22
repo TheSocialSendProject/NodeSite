@@ -1,15 +1,15 @@
 {
   "CONFIG":[
     {
-      "Version":"1.2.1"
-    },  
+      "Version":"1.2.3"
+    },
     {
       "RPC":[
         {
           "LogDebug":true,
           "Server":"127.0.0.1",
           "Username":"RPC_USERNAME",
-          "Port":"52021",
+          "Port":"50051",
           "Password":"RPC_PASSWORD"
         }
       ]
@@ -17,9 +17,9 @@
     {
       "EMAIL":[
         {
-          "FowardTo":"admin@ohmcoin.org",
-          "SystemFrom":"system@ohmc.tips",
-          "SystemFromName":"ohmc.tips SYSTEM"
+          "FowardTo":"admin@socialsend.io",
+          "SystemFrom":"us-e1-system@socialsend.io",
+          "SystemFromName":"us-e1.socialsend.io SYSTEM"
         }
       ]
     },

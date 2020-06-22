@@ -4,10 +4,10 @@ user="root"
 daemonDir="/var/www/nodesite/scripts"
 
 #Does not need to change per server
-tmuxFile="/tmp/ohmc"
+tmuxFile="/tmp/sendc"
 
 #Must be unique per server
-tmuxName="ohmiesite"
+tmuxName="sendysite"
 
 pyFile="daemon.py"
 pyArgs="-m prod"
