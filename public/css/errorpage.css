@@ -118,6 +118,21 @@ body {
 a {
   color: #fff;
   text-decoration: none;
+  transition: all 0.8s;
+  transition-delay: 0.2s;
+}
+
+a:hover {
+  text-shadow:
+    -1px -1px 3px rgba(145, 255, 202, 0.94),
+    1px -1px 3px rgba(145, 255, 202, 0.94),
+    -1px 1px 3px rgba(145, 255, 202, 0.94),
+    1px 1px 3px rgba(145, 255, 202, 0.94);
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  transition: all 0.5s;
+  transition-delay: 0.01s;
 }
 
 a::before {
