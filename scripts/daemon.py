@@ -70,8 +70,10 @@ class OhmRoot(object):
         print( "Root Directory: " + self.localDir )
         print( "Public Directory: " + self.pubDir )
         print( "[RPC BIND] " + "http://" + self.conf['rpc']['server']  + ":" + self.conf['rpc']['port'] + "/" )
-        # Setup 404 Error Page
-        _cp_config = {'error_page.404': os.path.join(self.pubDir, "error/404.html")}
+        # Setup Custom Error Pages
+        self._cp_config = {'error_page.404': os.path.join(self.pubDir, "error/404.html")}
+        self._cp_config = {'error_page.403': os.path.join(self.pubDir, "error/403.html")}
+        self._cp_config = {'error_page.500': os.path.join(self.pubDir, "error/500.html")}
 
     @cherrypy.expose
     def index(self):
@@ -220,7 +222,7 @@ class OhmRoot(object):
         xto = self.conf['mail']["fowardto"]
         # build the message
         msg = MIMEText(message)
-        msg['Subject'] = "[OHMC.TIPS] New Message from '" + name + "'"
+        msg['Subject'] = "[" + "socialsend.io" + "] New Message from '" + name + "'"
         msg['From'] = formataddr((str(Header(xfromName, 'utf-8')), xfrom))
         msg['To'] = xto
         # Send mail..
