@@ -26,7 +26,7 @@ __author__ = "squidicuz (Jon O)"
 __copyright__ = "Copyright 2020, Cryptech Services"
 __credits__ = ["RasAlGhul", "SeqSEE"]
 __license__ = "MIT"
-__version__ = "1.2.1"
+__version__ = "1.2.4"
 __maintainer__ = "squidicuz"
 __email__ = "squid@sqdmc.net"
 __status__ = "Development"
@@ -44,6 +44,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
 from pathlib import Path
+from shutil import copyfile
 
 
 # Main ohm web object
@@ -83,12 +84,19 @@ class OhmRoot(object):
         if (cherrypy.request.method == "GET") :
             message = { "response" : True, "status" : False, "message" : "post required.." }
             return json.dumps(message)
+        # check if email module enabled..
+        enb = self.conf['mail']["enabled"]
+        if (enb == False) :
+            message = { "response" : False, "status" : False, "message" : "disabled.." }
+            return json.dumps(message)
         # setup default vars
         body = json.loads("{}")
         remoteHost = "127.0.0.1"
         userAgent = "1"
         agentHash = "0"
         hostHash = "0"
+        if (self.verbose == True):
+            print( "> POST contact_submit ..." )
         # load form data
         try:
             cl = cherrypy.request.headers['Content-Length']
@@ -167,13 +175,15 @@ class OhmRoot(object):
         except Exception as ex:
             print("Failed to fetch Height!")
             print(ex)
-            return "error"
+            return json.dumps({"height": -1, "refreshtime" : 0 })
         return json.dumps({"height": height, "refreshtime" : retry })
 
     @cherrypy.expose
     def getconnectioncount(self):
         try:
             if self.allowHeightCache():
+                if (self.verbose == True):
+                    print( "> Update Connections on GET.." )
                 method = "getconnectioncount"
                 params = []
                 cc = self.doRpcRequest(method, params)
@@ -185,13 +195,15 @@ class OhmRoot(object):
         except Exception as ex:
             print("Failed to fetch Connection count!")
             print(ex)
-            return "error"
+            return json.dumps({"connections": -1, "refreshtime" : 0 })
         return json.dumps({"connections": conns, "refreshtime" : retry })
 
     @cherrypy.expose
     def getbestblock(self):
         try:
             if self.allowBlockCache():
+                if (self.verbose == True):
+                    print( "> Update Bestblock on GET.." )
                 method = "getblockcount"
                 params = []
                 hh = self.doRpcRequest(method, params)
@@ -209,7 +221,7 @@ class OhmRoot(object):
         except Exception as ex:
             print("Failed to fetch Block!")
             print(ex)
-            return "error"
+            return json.dumps({ "blockhash": -1, "height": -1, "refreshtime" : 0 })
         return json.dumps({ "blockhash": blockh, "height": height, "refreshtime" : retry })
 
     ###########################################################################
@@ -218,9 +230,10 @@ class OhmRoot(object):
         xfrom = self.conf['mail']["systemfrom"]
         xfromName = self.conf['mail']["sysnamefrom"]
         xto = self.conf['mail']["fowardto"]
+        sbjName = self.conf['mail']["subjectname"]
         # build the message
         msg = MIMEText(message)
-        msg['Subject'] = "[" + "socialsend.io" + "] New Message from '" + name + "'"
+        msg['Subject'] = "[" + sbjName + "] New Message from '" + name + "'"
         msg['From'] = formataddr((str(Header(xfromName, 'utf-8')), xfrom))
         msg['To'] = xto
         # Send mail..
@@ -231,6 +244,8 @@ class OhmRoot(object):
 
     # Host Agent cleaner
     def cleanHostAgents(self):
+        if (self.debug == True or self.verbose == True):
+            print( "> Cleaning Host Agents.." )
         hosts = []
         agents = []
         # Clean Hosts
@@ -304,6 +319,7 @@ class OhmRoot(object):
 
     # Do RPC request
     def doRpcRequest(self, method, params):
+        debug = self.conf['rpc']['debug']
         server = self.conf['rpc']['server']
         port = self.conf['rpc']['port']
         user = self.conf['rpc']['username']
@@ -311,11 +327,16 @@ class OhmRoot(object):
         url = 'http://' + server + ':' + port
         payload = json.dumps({" jsonrpc": "2.0", "id": "pycurl", "method": method, "params": params })
         headers = { 'content-type': 'application/json' }
-        if (self.debug == True):
+        if (self.debug == True or debug == True):
             print( "RPC Request= " + str(payload) )
         r = requests.post(url, data=payload, headers=headers, auth=(user, pazz))
-        respj = r.json()
-        return respj
+        if (r.status_code == requests.codes.ok):
+            if (self.debug == True or debug == True):
+                print( "Response Okay!" )
+            # Return response as json
+            return r.json()
+        # Return error if bad response
+        return json.dumps({ "result" : "error" })
 
     # RPC Height Caching
     def addHeightCache(self, value, updatetime = True):
@@ -425,26 +446,29 @@ def loadConf(dir):
         with open(confpath) as f:
             data = json.load(f)
         version = data['CONFIG'][0]['Version']
+        debug = data['CONFIG'][1]['RPC'][0]['LogDebug']
         username = data['CONFIG'][1]['RPC'][0]['Username']
         password = data['CONFIG'][1]['RPC'][0]['Password']
         server = data['CONFIG'][1]['RPC'][0]['Server']
         port = data['CONFIG'][1]['RPC'][0]['Port']
+        enb = data['CONFIG'][2]['EMAIL'][0]['Enabled']
         sysfrm = data['CONFIG'][2]['EMAIL'][0]['SystemFrom']
         sysnmefrm = data['CONFIG'][2]['EMAIL'][0]['SystemFromName']
         fwdto = data['CONFIG'][2]['EMAIL'][0]['FowardTo']
+        sbjname = data['CONFIG'][2]['EMAIL'][0]['ServerName']
         chost = data['CONFIG'][3]['XDOS'][0]['CooldownTimeHost']
         cagnt = data['CONFIG'][3]['XDOS'][0]['CooldownTimeAgent']
         cherrysrv = data['CONFIG'][4]['HTTP'][0]['Server']
         cherryprt = data['CONFIG'][4]['HTTP'][0]['Port']
-        rpc = { "username" : username, "password" : password, "server" : server, "port" : port }
-        mail = { "fowardto" : fwdto, "systemfrom" : sysfrm, "sysnamefrom" : sysnmefrm, "cooldownhost" : chost, "cooldownagent" : cagnt}
+        rpc = { "debug" : debug, "username" : username, "password" : password, "server" : server, "port" : port }
+        mail = { "enabled" : enb, "fowardto" : fwdto, "systemfrom" : sysfrm, "sysnamefrom" : sysnmefrm, "cooldownhost" : chost, "cooldownagent" : cagnt, "subjectname" : sbjname }
         srvr = { "server": cherrysrv, "port": cherryprt }
         item = { "version" : version, "rpc" : rpc, "mail" : mail, "web" : srvr, 'localdir' : dir }
         print("Config Loaded! Version " + version)
         return item
     except Exception as ex:
         print("Config Loading Error!  " + ex)
-        return {}
+        return { "version" : "0.0.0" }
 
 def main():
     conf = setup();
@@ -471,11 +495,22 @@ def setup():
         if os.path.exists(localDir + "/.env") == False:
             os.mkdir(localDir + "/.env")
             print( "Created '.env' Directory!" )
+        if os.path.exists(localDir + "/.env/conf.json") == False:
+            src = localDir + "/" + "default.conf.json"
+            dst = localDir + "/.env/" + "conf.json"
+            copyfile(src, dst)
+            print( "Created Default Config!" )
         print( "ERROR!! Configuration File 'conf.json' was not found or is invalid!" )
         print( "Run Aborted!" )
         sys.exit()
         return
     conf = loadConf(localDir)
+    if conf['version'] != __version__ :
+        print( "ERROR!! Configuration File 'conf.json' does not match program version!" )
+        print( "Please validate configuration." )
+        print( "Run Aborted!" )
+        sys.exit()
+        return
     print( "Binding HTTP Server Listener on " + str(conf['web']['server']) + ":" + str(conf['web']['port']) )
     # listen on all interfaces
     cherrypy.server.socket_host = conf['web']['server']
@@ -501,7 +536,7 @@ if __name__ == '__main__':
                 debug()
                 exit()
             elif args[1] == 'develop' or args[1] == 'dev':
-                debug()
+                dev()
                 exit()
             else:
                 print("MODE ARGS: prod|debug|develop")
