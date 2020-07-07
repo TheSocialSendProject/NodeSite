@@ -6,7 +6,7 @@ setInterval(ajax_load_conns, 64200);
 
 function ajax_load_block() {
   element = "";
-  path = "/api/getbestblock";
+  path = "/node/api/getbestblock";
   document.getElementById("blockhash").classList.add("coloryellow");
   document.getElementById("blockcount").classList.add("coloryellow");
   document.getElementById("blockcount").innerHTML = "0000000";
@@ -51,7 +51,7 @@ function ajax_load_block() {
 
 function ajax_load_conns() {
   element = "";
-  path = "/api/getconnectioncount";
+  path = "/node/api/getconnectioncount";
   document.getElementById("networkconn").classList.add("coloryellow");
   document.getElementById("networkconn").innerHTML = "00";
   var xhr = new XMLHttpRequest();

@@ -72,7 +72,7 @@ class OhmRoot(object):
         print( "Public Directory: " + self.pubDir )
         print( "[RPC BIND] " + "http://" + self.conf['rpc']['server']  + ":" + self.conf['rpc']['port'] + "/" )
         # Setup Custom Error Pages
-        self._cp_config = {'error_page.404': os.path.join(self.pubDir, "error/404.html"), 'error_page.403': os.path.join(self.pubDir, "error/403.html"), 'error_page.500': os.path.join(self.pubDir, "error/500.html")}
+        self._cp_config = {'error_page.404': os.path.join(self.pubDir, "node/error/404.html"), 'error_page.403': os.path.join(self.pubDir, "node/error/403.html"), 'error_page.500': os.path.join(self.pubDir, "node/error/500.html")}
 
     @cherrypy.expose
     def index(self):
